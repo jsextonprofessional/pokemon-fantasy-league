@@ -20,23 +20,39 @@ If the command fails because `gh` is not found, skip to Step 1.
 
 ## Step 1 — Gate check
 
-Run these commands. Stop and output BLOCKED: <command> + error output if any fail.
+Start Postgres if the story touches the API or database (`docker compose up -d db`), then run from the repo root. Stop and output BLOCKED: <command> + error output if any fail.
 
-pnpm typecheck
-pnpm check
-pnpm test --filter=affected
-pnpm lint
+```
+pnpm turbo run typecheck
+pnpm turbo run lint
+pnpm turbo run test --affected
+pnpm turbo run build --affected
+```
 
-All four must exit 0. `pnpm typecheck` catches CI-only TypeScript errors (e.g. `.stories.ts` type mismatches) invisible to Vitest. `pnpm check` (svelte-check) catches Svelte a11y warnings and component type errors — it must also pass before creating a PR.
+If the story changed `apps/api/prisma/schema.prisma`, also run the drift check:
+
+```
+pnpm --filter api prisma migrate diff \
+  --from-migrations prisma/migrations \
+  --to-schema-datamodel prisma/schema.prisma \
+  --shadow-database-url "$SHADOW_DATABASE_URL" \
+  --exit-code
+```
+
+All must exit 0. `typecheck` catches TypeScript errors Vitest never compiles. `build` catches Next.js (`apps/web`) and NestJS (`apps/api`) build failures that CI rejects. The drift check fails if the schema changed without a migration — CI runs the same check.
 
 ## Step 2 — Commit
 
-Group changes by logical unit (schema, service, route, tests).
-Format: <type>(<scope>): <what and why>
+Group changes by logical unit, in this order when present: shared contract, schema + migration, API service, API controller, MCP tools, web, tests, docs.
+Format: `<type>(<scope>): <what and why>`
+Types: feat, fix, refactor, test, docs, chore, ci.
+Scopes: `shared`, `db`, `api`, `mcp`, `web`, `ci`, `deploy`, `docs`, or an API module name (e.g. `quotes`, `ledger`).
 
 Run each commit:
 git add <files>
 git commit -m "<message>"
+
+Never commit `.env` files, secrets, or `.github/story-runs/` scratch files unless the repo already tracks them.
 
 ## Step 3 — Push (REQUIRED before PR)
 
@@ -49,11 +65,11 @@ Do NOT run `gh pr create` until this step has completed successfully.
 
 ## Step 4 — Open PR (required)
 
-Run:
+Write the filled-in PR body (template below) to `.github/story-runs/<run-id>/pr-body.md`, then run:
 
 gh pr create \
  --title "<type>(<scope>): <concise summary>" \
- --body "$(cat .github/pull_request_template.md)" \
+ --body-file .github/story-runs/<run-id>/pr-body.md \
  --base main \
  --head <branch-name>
 
@@ -72,17 +88,17 @@ Do not skip this step for any other reason.
 
 ## PR body template
 
-Write this into the PR body before creating:
+Fill in every section. Do not submit the template with placeholder comments.
 
 ---
 
 ## Summary
 
-<!-- What this PR does and why -->
+<!-- What this PR does and why. Story number and title. -->
 
 ## Changes
 
-<!-- Per-file or per-group summary -->
+<!-- Per-workspace summary: shared / db / api / mcp / web / ci -->
 
 ## Acceptance Criteria
 
@@ -90,16 +106,24 @@ Write this into the PR body before creating:
 | --------- | ------ |
 | ...       | ✅/❌  |
 
+## API & Contract
+
+<!-- New or changed /v1 endpoints, zod schemas in packages/shared, problem+json codes. "None" if not applicable. -->
+
+## MCP Impact
+
+<!-- Tools added or changed and their tier (read / draft-write / gated). "None" if not applicable. -->
+
 ## Testing
 
 ### Automated
 
-<!-- Test files and results -->
+<!-- Test files and results per workspace -->
 
 ### Manual
 
-<!-- Copy-pastable steps with expected output -->
+<!-- Copy-pastable steps (curl, prisma studio, MCP inspector) with expected output -->
 
 ## Risks & Rollback
 
-## <!-- Migration safety, feature flags, rollback steps -->
+<!-- Migration safety (backward compatible?), ledger/credit impact, feature flags, rollback steps -->
