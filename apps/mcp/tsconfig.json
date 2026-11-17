@@ -1,0 +1,5 @@
+{
+  "extends": "@pfl/config/tsconfig.base.json",
+  "compilerOptions": { "outDir": "dist", "rootDir": ".", "noEmit": true },
+  "include": ["src"]
+}
