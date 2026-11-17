@@ -64,3 +64,39 @@ The `createdb` command reports an error if the database already exists; skip it
 on subsequent runs. The API tests require this database and do not silently
 skip when it is unavailable. Test results are not cached for the API because
 they depend on its database.
+
+## GitHub CI and branch protection
+
+The `CI` workflow runs on pull requests and pushes to `main`. It uses an
+ephemeral PostgreSQL 16 service, applies migrations and seeds the dedicated
+test database, checks migration drift using a separate shadow database, and
+runs lint, typecheck, test and build. No repository secrets are required.
+
+Repository administrators must configure protection separately in **Settings →
+Rules → Rulesets** (or **Settings → Branches**):
+
+1. Target `main` and require a pull request before merging.
+2. Require status checks to pass, and select the `quality` check from the `CI`
+   workflow. The check becomes selectable after a workflow run.
+3. Do not grant bypass privileges; apply the rule to administrators as well.
+   This prevents direct pushes to `main`.
+
+Verify the workflow on a disposable PR: introduce an unused TypeScript variable
+and confirm the `Lint` step fails, then revert it. Add a nullable field to
+`apps/api/prisma/schema.prisma` without a migration and confirm `Check migration
+drift` fails, then revert it. The restored PR should pass. To rerun a completed
+workflow with the pnpm cache populated and inspect its duration:
+
+```sh
+BRANCH="$(git branch --show-current)"
+gh run list --workflow ci.yml --branch "$BRANCH"
+RUN_ID="$(gh run list --workflow ci.yml --branch "$BRANCH" --limit 1 --json databaseId --jq '.[0].databaseId')"
+test -n "$RUN_ID"
+gh run rerun "$RUN_ID"
+gh run watch "$RUN_ID" --exit-status
+gh run view "$RUN_ID"
+```
+
+The target for a warm-cache run is under five minutes; duration depends on
+runner availability. These settings are documented here but must be configured
+in GitHub; the workflow alone does not enforce branch protection.
