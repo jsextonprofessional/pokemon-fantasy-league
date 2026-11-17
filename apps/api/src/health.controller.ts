@@ -1,6 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
+const ciLintProbe = 'intentional validation failure';
+
 @ApiTags('health')
 @Controller('health')
 export class HealthController {
