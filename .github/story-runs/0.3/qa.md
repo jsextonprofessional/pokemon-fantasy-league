@@ -6,16 +6,25 @@
 - High: the first hosted run failed because Turbo's strict environment mode
   filtered out `TEST_DATABASE_URL`. Updated the CI test command to use
   `--env-mode=loose` so the dedicated service database is passed through.
+- Low: GitHub warns that the current action versions target Node 20 and are
+  being forced to Node 24. Follow up separately; dependency upgrades are out of
+  scope for this story.
 - No other high- or medium-severity findings in the workflow or documentation.
 
 ## Acceptance criteria
 
 - PR and main triggers, dependency cache, Node pin, frozen install, concurrency:
-  implemented; hosted verification pending.
+  implemented; the PR run passed. The main push trigger and concurrency
+  cancellation were not separately exercised.
 - PostgreSQL 16, migration, seed, drift detection, and all four turbo gates:
-  local clean-container simulation passed; hosted verification pending.
-- Intentional lint and migration-drift failures and warm-cache timing: pending
-  execution on the story PR.
+  passed in [hosted CI](https://github.com/jsextonprofessional/pokemon-fantasy-league/actions/runs/44131361297).
+- Intentional lint error failed at `Lint` in
+  [CI](https://github.com/jsextonprofessional/pokemon-fantasy-league/actions/runs/44132138936).
+  After reverting it, [CI passed](https://github.com/jsextonprofessional/pokemon-fantasy-league/actions/runs/44132374512)
+  in 1 minute 34 seconds with a pnpm cache hit.
+- Schema-only change failed at `Check migration drift` in
+  [CI](https://github.com/jsextonprofessional/pokemon-fantasy-league/actions/runs/44132792194).
+  That change was reverted; consult the PR check for the final commit.
 - Branch-protection requirements documented; actual repository settings must be
   applied by an administrator.
 - GitHub's branch-protection API returned 403: this private repository needs
@@ -31,5 +40,5 @@
   container. The initial local test had instead used the local `.env` because
   Turbo filtered the supplied environment.
 
-Merge readiness is pending the actual hosted CI verification and branch
-protection configuration.
+Merge readiness depends on the final PR check and branch protection
+configuration.
