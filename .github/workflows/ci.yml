@@ -76,7 +76,7 @@ jobs:
           DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
 
       - name: Test
-        run: pnpm turbo run test
+        run: pnpm turbo run test --env-mode=loose
 
       - name: Build
         run: pnpm turbo run build
