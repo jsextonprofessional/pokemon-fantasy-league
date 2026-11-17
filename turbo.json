@@ -8,6 +8,7 @@
     "typecheck": { "dependsOn": ["^build"] },
     "lint": { "dependsOn": ["^build"] },
     "test": { "dependsOn": ["^build"] },
+    "@pfl/api#test": { "dependsOn": ["^build"], "cache": false },
     "dev": { "dependsOn": ["^build"], "cache": false, "persistent": true }
   }
 }
