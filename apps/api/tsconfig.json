@@ -1,0 +1,10 @@
+{
+  "extends": "@pfl/config/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": ["src", "test", "vitest.config.mts"]
+}
