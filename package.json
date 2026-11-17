@@ -11,7 +11,9 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:migrate": "pnpm --filter @pfl/api db:migrate",
+    "db:seed": "pnpm --filter @pfl/shared build && pnpm --filter @pfl/api build && pnpm --filter @pfl/api db:seed"
   },
   "devDependencies": {
     "@pfl/config": "workspace:^",

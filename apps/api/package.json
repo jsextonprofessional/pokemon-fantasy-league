@@ -4,10 +4,13 @@
   "private": true,
   "scripts": {
     "build": "nest build",
-    "dev": "nest start --watch",
+    "dev": "node --env-file-if-exists=.env ./node_modules/@nestjs/cli/bin/nest.js start --watch",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "node --env-file-if-exists=.env ./node_modules/vitest/vitest.mjs run",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node --env-file-if-exists=.env dist/catalog/seed.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.10",
@@ -15,6 +18,8 @@
     "@nestjs/platform-express": "^11.2.10",
     "@nestjs/swagger": "^11.4.8",
     "@pfl/shared": "workspace:^",
+    "@pkmn/dex": "^0.11.0",
+    "@prisma/client": "6",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
@@ -27,6 +32,7 @@
     "@types/node": "^22.20.5",
     "@types/supertest": "^7.2.1",
     "eslint": "^10.15.0",
+    "prisma": "6",
     "supertest": "^7.3.2",
     "unplugin-swc": "^2.0.0",
     "vitest": "^5.1.0"
